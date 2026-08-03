@@ -1,10 +1,12 @@
 ﻿using KanbanApi.DTOs;
 using KanbanApi.Data;
 using KanbanApi.Models;
+using KanbanApi.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace KanbanApi.Services
 {
-    public class BoardService
+    public class BoardService : IBoardService
     {
         private readonly KanbanDbContext context;
 
@@ -44,12 +46,12 @@ namespace KanbanApi.Services
         /// <param name="request"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<BoardResponse> UpdateBoardAsync(int id, UpdateBoardRequest request)
+        public async Task<BoardResponse?> UpdateBoardAsync(int id, UpdateBoardRequest request)
         {
             // Find the existing board by its ID
             var board = await context.Boards.FindAsync(id);
             if (board == null)
-                throw new InvalidOperationException("Board not found");
+                return null;
 
             // Update the board's properties with the data from the request
             board.BoardName = request.BoardName;
@@ -60,6 +62,59 @@ namespace KanbanApi.Services
 
             // Convert the updated board entity to a BoardResponse DTO and return it
             return board.ToDto();
+        }
+
+        /// <summary>
+        /// Deletes an existing board identified by its ID from the database.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<BoardResponse?> GetBoardByIdAsync(int id)
+        {
+            // Find the board by its ID
+            var board = await context.Boards.FindAsync(id);
+            if (board == null)
+                return null;
+
+            // Convert the board entity to a BoardResponse DTO and return it
+            return board.ToDto();
+        }
+
+        /// <summary>
+        /// Retrieves all boards associated with a specific user ID and returns them as a collection of BoardResponse DTOs.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<BoardResponse>> GetBoardsByUserIdAsync(int userId)
+        {
+            // Retrieve all boards associated with the specified user ID
+            var boards = await context.Boards
+                .Where(b => b.UserId == userId)
+                .ToListAsync();
+
+            // Convert the list of board entities to a list of BoardResponse DTOs and return it
+            return boards.Select(b => b.ToDto());
+        }
+
+        /// <summary>
+        /// Deletes an existing board identified by its ID from the database.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public async Task<bool> DeleteBoardAsync(int id)
+        {
+            // Find the board by its ID
+            var board = await context.Boards.FindAsync(id);
+            if (board == null)
+                return false;
+
+            // Remove the board from the database context and save changes
+            context.Boards.Remove(board);
+            await context.SaveChangesAsync();
+
+            // Return true to indicate successful deletion
+            return true;
         }
     }
 }

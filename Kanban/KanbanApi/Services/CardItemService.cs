@@ -1,10 +1,12 @@
-﻿using KanbanApi.Models;
+﻿using KanbanApi.Data;
 using KanbanApi.DTOs;
-using KanbanApi.Data;
+using KanbanApi.Interfaces;
+using KanbanApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace KanbanApi.Services
 {
-    public class CardItemService
+    public class CardItemService : ICardItemService
     {
         private readonly KanbanDbContext context;
 
@@ -19,7 +21,7 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<CardItemResponse> CareateCardItemAsync(int columnId, CreateCardItemRequest request)
+        public async Task<CardItemResponse> CreateCardItemAsync(int columnId, CreateCardItemRequest request)
         {
             // Create a new CardItem entity based on the request data
             var cardItem = new CardItem
@@ -45,12 +47,12 @@ namespace KanbanApi.Services
         /// <param name="request"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<CardItemResponse> UpdateCardItemAsync(int id, UpdateCardItemRequest request)
+        public async Task<CardItemResponse?> UpdateCardItemAsync(int id, UpdateCardItemRequest request)
         {
             // Find the card item in the database by its ID
             var cardItem = await context.CardItems.FindAsync(id);
             if (cardItem == null)
-                throw new InvalidOperationException("Card item not found");
+                return null;
 
             // Update the card item properties based on the request data
             cardItem.Title = request.Title;
@@ -60,6 +62,57 @@ namespace KanbanApi.Services
             // Save changes to the database
             await context.SaveChangesAsync();
             return cardItem.ToDto();
+        }
+
+        /// <summary>
+        /// Retrieves a card item from the database by its ID and returns it as a response DTO.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<CardItemResponse?> GetCardItemByIdAsync(int id)
+        {
+            // Find the card item in the database by its ID
+            var cardItem = await context.CardItems.FindAsync(id);
+            if (cardItem == null)
+                return null;
+
+            // Return the found card item as a response DTO
+            return cardItem.ToDto();
+        }
+
+        /// <summary>
+        /// Retrieves all card items associated with a specific column ID from the database and returns them as a collection of response DTOs.
+        /// </summary>
+        /// <param name="columnId"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId)
+        {
+            // Retrieve all card items associated with the specified column ID
+            var cardItems = await context.CardItems
+                .Where(ci => ci.ColumnId == columnId)
+                .ToListAsync();
+
+            // Convert the list of card items to a list of response DTOs and return it
+            return cardItems.Select(ci => ci.ToDto());
+        }
+
+        /// <summary>
+        /// Deletes a card item from the database by its ID and returns a boolean indicating whether the deletion was successful.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public async Task<bool> DeleteCardItemAsync(int id)
+        {
+            // Find the card item in the database by its ID
+            var cardItem = await context.CardItems.FindAsync(id);
+            if (cardItem == null)
+                return false;
+
+            // Remove the card item from the database context and save changes
+            context.CardItems.Remove(cardItem);
+            await context.SaveChangesAsync();
+            return true;
         }
     }
 }
