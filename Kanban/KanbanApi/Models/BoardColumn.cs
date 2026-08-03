@@ -1,8 +1,11 @@
-﻿namespace KanbanApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace KanbanApi.Models
 {
     public class BoardColumn
     {
-        public int ColumnId { get; set; }
+        [Key] public int ColumnId { get; set; }
+        public string ColumnName { get; set; } = string.Empty;
         public int Order { get; set; }
 
         // Foreign key to the Board
