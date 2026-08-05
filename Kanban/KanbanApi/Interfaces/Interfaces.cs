@@ -26,6 +26,7 @@ namespace KanbanApi.Interfaces
         Task<BoardColumnResponse?> UpdateBoardColumnAsync(int id, UpdateBoardColumnRequest request);
         Task<BoardColumnResponse?> GetBoardColumnByIdAsync(int id);
         Task<IEnumerable<BoardColumnResponse>> GetBoardColumnsByBoardIdAsync(int boardId);
+        Task<BoardColumnResponse?> ChangeOrderBoardColumnAsync(int id, ChangeOrderBoardColumnRequest request);
         Task<bool> DeleteBoardColumnAsync(int id);
     }
 
@@ -35,6 +36,8 @@ namespace KanbanApi.Interfaces
         Task<CardItemResponse?> UpdateCardItemAsync(int id, UpdateCardItemRequest request);
         Task<CardItemResponse?> GetCardItemByIdAsync(int id);
         Task<IEnumerable<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId);
+        Task<CardItemResponse?> ChangeOrderCardItemAsync(int id, ChangeOrderCardItemRequest request);
+        Task<CardItemResponse?> MoveCardItemColumnAsync(int id, MoveCardItemColumnRequest request);
         Task<bool> DeleteCardItemAsync(int id);
     }
 }

@@ -2,6 +2,7 @@
 using KanbanApi.DTOs;
 using KanbanApi.Interfaces;
 using KanbanApi.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace KanbanApi.Services
@@ -98,6 +99,89 @@ namespace KanbanApi.Services
         }
 
         /// <summary>
+        /// Changes the order of a card item in the database based on the provided ID and request data, and returns the updated card item as a response DTO.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public async Task<CardItemResponse?> ChangeOrderCardItemAsync(int id, ChangeOrderCardItemRequest request)
+        {
+            // Find the card item in the database by its ID
+            var cardItem = await context.CardItems.FindAsync(id);
+            if (cardItem == null) return null;
+
+            // Validate the new order value to ensure it is within the valid range
+            if (request.Order < 1 || request.Order > await context.CardItems.CountAsync())
+                return null;
+
+            int oldOrder = cardItem.Order;
+            int newOrder = request.Order;
+
+            if(oldOrder == newOrder) return cardItem.ToDto();
+
+            // Retrieve all card items in the same column that have an order between the old and new order values
+            await ReorderAllCardsInColumn(cardItem, newOrder, oldOrder);
+
+            // Update the order of the card item based on the request data
+            cardItem.Order = request.Order;
+
+            // Save changes to the database
+            await context.SaveChangesAsync();
+            return cardItem.ToDto();
+        }
+
+        /// <summary>
+        /// Moves a card item to a different column in the database based on the provided ID and request data, and returns the updated card item as a response DTO.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public async Task<CardItemResponse?> MoveCardItemColumnAsync(int id, MoveCardItemColumnRequest request)
+        {
+            // Find the card item in the database by its ID
+            var cardItem = await context.CardItems.FindAsync(id);
+            if (cardItem == null) return null;
+
+            // Find the destination column in the database by its ID
+            var destinationColumn = await context.BoardColumns.FindAsync(request.DestinationColumnId);
+            if (destinationColumn == null) return null;
+
+            int newColumnId = request.DestinationColumnId;
+            int oldColumnId = cardItem.ColumnId;
+            int oldOrder = cardItem.Order;
+
+            // Retrieve all card items in the old column that have an order greater than the moved card item's order
+            var oldColumnCards = await context.CardItems
+                .Where(ci => ci.ColumnId == oldColumnId &&
+                ci.Order > oldOrder)
+                .ToListAsync();
+
+            foreach (var card in oldColumnCards)
+                card.Order--;
+
+            // Retrieve all card items in the destination column to determine the new order for the moved card item
+            var cards = await context.CardItems
+            .Where(c => c.ColumnId == newColumnId)
+            .ToListAsync();
+
+            // Update the column ID of the card item based on the request data
+            cardItem.ColumnId = newColumnId;
+
+            if (cards.Count == 0)
+            {
+                cardItem.Order = 1;
+            }
+            else
+            {
+                cardItem.Order = cards.Max(c => c.Order) + 1;
+            }
+
+            // Save changes to the database
+            await context.SaveChangesAsync();
+            return cardItem.ToDto();
+        }
+
+        /// <summary>
         /// Deletes a card item from the database by its ID and returns a boolean indicating whether the deletion was successful.
         /// </summary>
         /// <param name="id"></param>
@@ -113,6 +197,42 @@ namespace KanbanApi.Services
             context.CardItems.Remove(cardItem);
             await context.SaveChangesAsync();
             return true;
+        }
+
+        /// <summary>
+        /// Changes the order of all card items in the same column based on the provided card item, new order, and old order values. This method adjusts the order of other card items in the column to maintain a consistent ordering.
+        /// </summary>
+        /// <param name="cardItem"></param>
+        /// <param name="newOrder"></param>
+        /// <param name="oldOrder"></param>
+        /// <returns></returns>
+        private async Task ReorderAllCardsInColumn(CardItem cardItem, int newOrder, int oldOrder)
+        {
+            // If the new order is greater than the old order, decrement the order of card items that are between the old and new order values
+            if (newOrder > oldOrder)
+            {
+                List<CardItem> cardsToUpper = await context.CardItems
+                .Where(
+                ci => ci.ColumnId == cardItem.ColumnId &&
+                ci.Order <= newOrder &&
+                ci.Order > oldOrder)
+                .ToListAsync();
+
+                foreach (var card in cardsToUpper)
+                    card.Order--;
+            }
+            else
+            {
+                List<CardItem> cardsToLower = await context.CardItems
+                .Where(
+                ci => ci.ColumnId == cardItem.ColumnId &&
+                ci.Order >= newOrder &&
+                ci.Order < oldOrder)
+                .ToListAsync();
+
+                foreach (var card in cardsToLower)
+                    card.Order++;
+            }
         }
     }
 }

@@ -33,7 +33,7 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="boardColumnId"></param>
         /// <returns></returns>
-        [HttpGet("Column/{BoardColumnId}")]
+        [HttpGet("Column/{boardColumnId}")]
         public async Task<IActionResult> GetCardItemsByBoardColumnId(int boardColumnId)
         {
             var cardItems = await _cardItemService.GetCardItemsByColumnIdAsync(boardColumnId);
@@ -63,6 +63,32 @@ namespace KanbanApi.Controllers
         public async Task<IActionResult> UpdateCardItem(int id, UpdateCardItemRequest request)
         {
             var cardItem = await _cardItemService.UpdateCardItemAsync(id, request);
+            return cardItem is null ? NotFound() : Ok(cardItem);
+        }
+
+        /// <summary>
+        /// Changes the order of a card item within its board column.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPatch("{id}/order")]
+        public async Task<IActionResult> ChangeOrderCardItem(int id, ChangeOrderCardItemRequest request)
+        {
+            var cardItem = await _cardItemService.ChangeOrderCardItemAsync(id, request);
+            return cardItem is null ? NotFound() : Ok(cardItem);
+        }
+
+        /// <summary>
+        /// Moves a card item to a different board column.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPatch("{id}/move")]
+        public async Task<IActionResult> MoveCardItemColumn(int id, MoveCardItemColumnRequest request)
+        {
+            var cardItem = await _cardItemService.MoveCardItemColumnAsync(id, request);
             return cardItem is null ? NotFound() : Ok(cardItem);
         }
 

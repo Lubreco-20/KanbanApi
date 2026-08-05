@@ -34,7 +34,7 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        [HttpGet("User/{UserId}")]
+        [HttpGet("User/{userId}")]
         public async Task<IActionResult> GetBoardByUserId(int userId)
         {
             var board = await _boardService.GetBoardsByUserIdAsync(userId);

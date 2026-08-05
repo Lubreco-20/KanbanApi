@@ -21,12 +21,18 @@ builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IBoardColumnService, BoardColumnService>();
 builder.Services.AddScoped<ICardItemService, CardItemService>();
 
+// Add Swagger/OpenAPI services
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    //app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

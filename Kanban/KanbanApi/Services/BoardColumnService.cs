@@ -96,6 +96,37 @@ namespace KanbanApi.Services
         }
 
         /// <summary>
+        /// Moves a board column to a new order based on the provided ID and request, and returns the updated board column as a response DTO.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public async Task<BoardColumnResponse?> ChangeOrderBoardColumnAsync(int id, ChangeOrderBoardColumnRequest request)
+        {
+            // Check if the board column exists
+            var column = await context.BoardColumns.FindAsync(id);
+            if (column == null) return null;
+
+            // Validate the new order value to ensure it is within the valid range
+            if (request.Order < 1 || request.Order > await context.BoardColumns.CountAsync())
+                return null;
+
+            int newOrder = request.Order;
+            int oldOrder = column.Order;
+
+            if (oldOrder == newOrder) return column.ToDto();
+
+            await ReorderBoardColumnAsync(column, newOrder, oldOrder);
+
+            // Update the board column's order based on the request
+            column.Order = newOrder;
+
+            // Save the changes to the database
+            await context.SaveChangesAsync();
+            return column.ToDto();
+        }
+
+        /// <summary>
         /// Deletes a board column from the database based on the provided ID and returns a boolean indicating whether the deletion was successful.
         /// </summary>
         /// <param name="id"></param>
@@ -111,6 +142,41 @@ namespace KanbanApi.Services
             context.BoardColumns.Remove(boardColumn);
             await context.SaveChangesAsync();
             return true;
+        }
+
+        /// <summary>
+        /// Reorders the board columns in the database based on the provided column, new order, and old order. This method adjusts the order of other columns to maintain a consistent ordering.
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="newOrder"></param>
+        /// <param name="oldOrder"></param>
+        /// <returns></returns>
+        private async Task ReorderBoardColumnAsync(BoardColumn column, int newOrder, int oldOrder)
+        {
+            if (newOrder > oldOrder)
+            {
+                List<BoardColumn> columnsToLeft = await context.BoardColumns
+                .Where(
+                bc => bc.BoardId == column.BoardId &&
+                bc.Order <= newOrder &&
+                bc.Order > oldOrder)
+                .ToListAsync();
+
+                foreach (var boardColumn in columnsToLeft)
+                    boardColumn.Order--;
+            }
+            else
+            {
+                List<BoardColumn> columnsToRight = await context.BoardColumns
+                .Where(
+                bc => bc.BoardId == column.BoardId &&
+                bc.Order >= newOrder &&
+                bc.Order < oldOrder)
+                .ToListAsync();
+
+                foreach (var boardColumn in columnsToRight)
+                    boardColumn.Order++;
+            }
         }
     }
 }

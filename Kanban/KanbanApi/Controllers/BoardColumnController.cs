@@ -29,7 +29,7 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="boardId"></param>
         /// <returns></returns>
-        [HttpGet("Board/{BoardId}")]
+        [HttpGet("Board/{boardId}")]
         public async Task<IActionResult> GetBoardColumnsByBoardId(int boardId)
         {
             var columns = await _boardColumnService.GetBoardColumnsByBoardIdAsync(boardId);
@@ -76,6 +76,20 @@ namespace KanbanApi.Controllers
             var deleted = await _boardColumnService.DeleteBoardColumnAsync(id);
 
             return deleted ? NoContent() : NotFound();
+        }
+
+        /// <summary>
+        /// Moves a board column to a new order position.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPatch("{id}/order")]
+        public async Task<IActionResult> ChangeOrderBoardColumn(int id, ChangeOrderBoardColumnRequest request)
+        {
+            var column = await _boardColumnService.ChangeOrderBoardColumnAsync(id, request);
+
+            return column is null ? NotFound() : Ok(column);
         }
     }
 }
