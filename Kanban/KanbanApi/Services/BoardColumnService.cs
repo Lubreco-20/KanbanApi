@@ -21,13 +21,23 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<BoardColumnResponse> CreateBoardColumnAsync(int boardId, CreateBoardColumnRequest request)
+        public async Task<BoardColumnResponse?> CreateBoardColumnAsync(int boardId, CreateBoardColumnRequest request)
         {
+            // Check if the board exists
+            var board = await context.Boards.FindAsync(boardId);
+            if (board == null) return null;
+
+            var columns = await context.BoardColumns.
+                Where(b => b.BoardId == board.BoardId).
+                ToListAsync();
+
+            int newOrder = columns.Any() ? columns.Max(c => c.Order) + 1 : 0;
+
             // Create a new BoardColumn entity based on the request and the provided board ID
             var boardColumn = new BoardColumn
             {
                 ColumnName = request.ColumnName,
-                Order = request.Order,
+                Order = newOrder,
                 BoardId = boardId
             };
 
@@ -55,7 +65,6 @@ namespace KanbanApi.Services
 
             // Update the board column properties based on the request
             boardColumn.ColumnName = request.ColumnName;
-            boardColumn.Order = request.Order;
 
             // Save the changes to the database
             await context.SaveChangesAsync();
@@ -108,7 +117,8 @@ namespace KanbanApi.Services
             if (column == null) return null;
 
             // Validate the new order value to ensure it is within the valid range
-            if (request.Order < 1 || request.Order > await context.BoardColumns.CountAsync())
+            var amountColumns = await context.BoardColumns.CountAsync(bc => bc.BoardId == column.BoardId);
+            if (request.Order < 0 || request.Order > amountColumns - 1)
                 return null;
 
             int newOrder = request.Order;
@@ -137,6 +147,8 @@ namespace KanbanApi.Services
             var boardColumn = await context.BoardColumns.FindAsync(id);
             if (boardColumn == null)
                 return false;
+
+            await ReorderColumnsAfterDelete(boardColumn);
 
             // Remove the board column from the database
             context.BoardColumns.Remove(boardColumn);
@@ -177,6 +189,23 @@ namespace KanbanApi.Services
                 foreach (var boardColumn in columnsToRight)
                     boardColumn.Order++;
             }
+        }
+
+        /// <summary>
+        /// Changes the order of all board columns in the same board based on the provided column to be deleted. This method adjust the order of other columns in the board to maintaing a consistent ordering
+        /// </summary>
+        /// <param name="deletedColumn"></param>
+        /// <returns></returns>
+        private async Task ReorderColumnsAfterDelete(BoardColumn deletedColumn)
+        {
+            // Gets all columns with grater order value than the deleted column
+            var columns = await context.BoardColumns.
+                Where(bc => bc.BoardId == deletedColumn.BoardId && bc.Order > deletedColumn.Order).
+                ToListAsync();
+
+            // reduce the order of the provided columns
+            foreach (var column in columns)
+                column.Order--;
         }
     }
 }

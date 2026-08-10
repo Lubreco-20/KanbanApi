@@ -22,15 +22,27 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<CardItemResponse> CreateCardItemAsync(int columnId, CreateCardItemRequest request)
+        public async Task<CardItemResponse?> CreateCardItemAsync(int columnId, CreateCardItemRequest request)
         {
+            // Check if desired column exist
+            var column = await context.BoardColumns.FindAsync(columnId);
+            if (column == null) return null;
+
+            // Look if there is any card in the column
+            var cardsInColumn = await context.CardItems.
+                Where(ci => ci.ColumnId == columnId).
+                ToListAsync();
+
+            // If there is no card, then this card will take the Order 0, otherwise, the card will be created at the bottom
+            int newOrder = cardsInColumn.Any() ? cardsInColumn.Max(c => c.Order) + 1 : 0;
+
             // Create a new CardItem entity based on the request data
             var cardItem = new CardItem
             {
                 Title = request.Title,
                 Description = request.Description,
-                Order = request.Order,
-                ColumnId = columnId
+                ColumnId = columnId,
+                Order = newOrder,
             };
 
             // Add the new card item to the database context and save changes
@@ -52,13 +64,11 @@ namespace KanbanApi.Services
         {
             // Find the card item in the database by its ID
             var cardItem = await context.CardItems.FindAsync(id);
-            if (cardItem == null)
-                return null;
+            if (cardItem == null) return null;
 
             // Update the card item properties based on the request data
             cardItem.Title = request.Title;
             cardItem.Description = request.Description;
-            cardItem.Order = request.Order;
 
             // Save changes to the database
             await context.SaveChangesAsync();
@@ -111,7 +121,8 @@ namespace KanbanApi.Services
             if (cardItem == null) return null;
 
             // Validate the new order value to ensure it is within the valid range
-            if (request.Order < 1 || request.Order > await context.CardItems.CountAsync())
+            var cardInColumn = await context.CardItems.CountAsync(ci => ci.ColumnId == cardItem.ColumnId);
+            if (request.Order < 0 || request.Order > cardInColumn - 1)
                 return null;
 
             int oldOrder = cardItem.Order;
@@ -145,6 +156,7 @@ namespace KanbanApi.Services
             // Find the destination column in the database by its ID
             var destinationColumn = await context.BoardColumns.FindAsync(request.DestinationColumnId);
             if (destinationColumn == null) return null;
+            if(destinationColumn.ColumnId == cardItem.ColumnId) return cardItem.ToDto();
 
             int newColumnId = request.DestinationColumnId;
             int oldColumnId = cardItem.ColumnId;
@@ -169,7 +181,7 @@ namespace KanbanApi.Services
 
             if (cards.Count == 0)
             {
-                cardItem.Order = 1;
+                cardItem.Order = 0;
             }
             else
             {
@@ -192,6 +204,8 @@ namespace KanbanApi.Services
             var cardItem = await context.CardItems.FindAsync(id);
             if (cardItem == null)
                 return false;
+
+            await ReorderCardsAfterDelete(cardItem);
 
             // Remove the card item from the database context and save changes
             context.CardItems.Remove(cardItem);
@@ -233,6 +247,23 @@ namespace KanbanApi.Services
                 foreach (var card in cardsToLower)
                     card.Order++;
             }
+        }
+
+        /// <summary>
+        /// Changes the order of all cards items in the same column based on the provided card item to be deleted. This method adjust the order of other card items in the column to maintaing a consistent ordering
+        /// </summary>
+        /// <param name="deletedCard"></param>
+        /// <returns></returns>
+        private async Task ReorderCardsAfterDelete(CardItem deletedCard)
+        {
+            // Get al cards that comes after the deleted card
+            var cardsAfter = await context.CardItems.
+                Where(ci => ci.ColumnId == deletedCard.ColumnId && ci.Order > deletedCard.Order).
+                ToListAsync();
+
+            // Reduce the order of the obtained cards to maintain consistency
+            foreach(var card in cardsAfter)
+                card.Order--;
         }
     }
 }

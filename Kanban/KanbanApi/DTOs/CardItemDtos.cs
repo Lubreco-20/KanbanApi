@@ -2,14 +2,12 @@
 {
     public sealed record CreateCardItemRequest(
         string Title,
-        string Description,
-        int Order
+        string Description
         );
 
     public sealed record UpdateCardItemRequest(
         string Title,
-        string Description,
-        int Order
+        string Description
         );
 
     public sealed record ChangeOrderCardItemRequest(

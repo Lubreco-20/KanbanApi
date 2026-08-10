@@ -1,13 +1,11 @@
 ﻿namespace KanbanApi.DTOs
 {
     public sealed record CreateBoardColumnRequest(
-        string ColumnName,
-        int Order
+        string ColumnName
         );
 
     public sealed record UpdateBoardColumnRequest(
-        string ColumnName,
-        int Order
+        string ColumnName
         );
 
     public sealed record ChangeOrderBoardColumnRequest(

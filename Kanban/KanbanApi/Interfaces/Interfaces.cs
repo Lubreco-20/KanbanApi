@@ -13,7 +13,7 @@ namespace KanbanApi.Interfaces
 
     public interface IBoardService
     {
-        Task<BoardResponse> CreateBoardAsync(int userId, CreateBoardRequest request);
+        Task<BoardResponse?> CreateBoardAsync(int userId, CreateBoardRequest request);
         Task<BoardResponse?> UpdateBoardAsync(int id, UpdateBoardRequest request);
         Task<BoardResponse?> GetBoardByIdAsync(int id);
         Task<IEnumerable<BoardResponse>> GetBoardsByUserIdAsync(int userId);
@@ -22,7 +22,7 @@ namespace KanbanApi.Interfaces
 
     public interface IBoardColumnService
     {
-        Task<BoardColumnResponse> CreateBoardColumnAsync(int boardId, CreateBoardColumnRequest request);
+        Task<BoardColumnResponse?> CreateBoardColumnAsync(int boardId, CreateBoardColumnRequest request);
         Task<BoardColumnResponse?> UpdateBoardColumnAsync(int id, UpdateBoardColumnRequest request);
         Task<BoardColumnResponse?> GetBoardColumnByIdAsync(int id);
         Task<IEnumerable<BoardColumnResponse>> GetBoardColumnsByBoardIdAsync(int boardId);
@@ -32,7 +32,7 @@ namespace KanbanApi.Interfaces
 
     public interface ICardItemService
     {
-        Task<CardItemResponse> CreateCardItemAsync(int columnId, CreateCardItemRequest request);
+        Task<CardItemResponse?> CreateCardItemAsync(int columnId, CreateCardItemRequest request);
         Task<CardItemResponse?> UpdateCardItemAsync(int id, UpdateCardItemRequest request);
         Task<CardItemResponse?> GetCardItemByIdAsync(int id);
         Task<IEnumerable<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId);

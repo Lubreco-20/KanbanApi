@@ -21,8 +21,12 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<BoardResponse> CreateBoardAsync(int userId,CreateBoardRequest request)
+        public async Task<BoardResponse?> CreateBoardAsync(int userId,CreateBoardRequest request)
         {
+            // Check if the user exists
+            var user = await context.Users.FindAsync(userId);
+            if (user == null) return null;
+
             // Create a new Board entity using the data from the request
             var board = new Board
             {
