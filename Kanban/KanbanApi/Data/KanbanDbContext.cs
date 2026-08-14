@@ -15,6 +15,7 @@ namespace KanbanApi.Data
         public DbSet<BoardColumn> BoardColumns { get; set; }
         public DbSet<CardItem> CardItems { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<RefreshToken> Tokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +50,11 @@ namespace KanbanApi.Data
                 .WithMany(c => c.CardItems)
                 .HasForeignKey(ci => ci.ColumnId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId);
         }
     }
 }

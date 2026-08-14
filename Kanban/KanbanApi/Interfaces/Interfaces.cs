@@ -1,4 +1,5 @@
 using KanbanApi.DTOs;
+using KanbanApi.Models;
 
 namespace KanbanApi.Interfaces
 {
@@ -39,5 +40,17 @@ namespace KanbanApi.Interfaces
         Task<CardItemResponse?> ChangeOrderCardItemAsync(int id, ChangeOrderCardItemRequest request);
         Task<CardItemResponse?> MoveCardItemColumnAsync(int id, MoveCardItemColumnRequest request);
         Task<bool> DeleteCardItemAsync(int id);
+    }
+
+    public interface ITokenService
+    {
+        string GenerateAccessToken(User user);
+        string GenerateRefreshToken();
+    }
+
+    public interface IAuthService
+    {
+        Task<LoginResponse?> LoginAsync(LoginRequest request);
+        Task<LoginResponse?> RefreshAsync(RefreshRequest request);
     }
 }
