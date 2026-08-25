@@ -5,6 +5,9 @@
         string Password
         );
 
+    public sealed record LogoutRequest(
+        string refreshToken);
+
     public sealed record RefreshRequest(
         string RefreshToken);
 

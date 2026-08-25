@@ -20,6 +20,13 @@ namespace KanbanApi.Controllers
             return result is null ? Unauthorized("Invalid credentials") : Ok(result);
         }
 
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(LogoutRequest request)
+        {
+            var succes = await authService.LogoutAsync(request);
+            return succes ? NoContent() : NotFound();
+        }
+
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh(RefreshRequest request)
         {

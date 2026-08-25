@@ -51,6 +51,7 @@ namespace KanbanApi.Interfaces
     public interface IAuthService
     {
         Task<LoginResponse?> LoginAsync(LoginRequest request);
+        Task<bool> LogoutAsync(LogoutRequest request);
         Task<LoginResponse?> RefreshAsync(RefreshRequest request);
     }
 }

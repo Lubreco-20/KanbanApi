@@ -42,6 +42,20 @@ namespace KanbanApi.Services
             return new LoginResponse(accessToken, refreshTokenValue, user.ToDto());
         }
 
+        public async Task<bool> LogoutAsync(LogoutRequest request)
+        {
+            var storedToken = await context.Tokens
+                .FirstOrDefaultAsync(t => t.Token == request.refreshToken);
+
+            if (storedToken == null)
+                return false;
+
+            storedToken.IsRevoked = true;
+            await context.SaveChangesAsync();
+
+            return true;
+        }
+
         public async Task<LoginResponse?> RefreshAsync(RefreshRequest request)
         {
             var storedToken = await context.Tokens
