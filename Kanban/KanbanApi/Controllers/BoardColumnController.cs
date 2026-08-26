@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using KanbanApi.DTOs;
+﻿using KanbanApi.DTOs;
 using KanbanApi.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace KanbanApi.Controllers
 {
@@ -16,10 +18,14 @@ namespace KanbanApi.Controllers
         /// <param name="boardColumnService"></param>
         public BoardColumnController(IBoardColumnService boardColumnService) => _boardColumnService = boardColumnService;
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBoardColumn(int id)
         {
-            var column = await _boardColumnService.GetBoardColumnByIdAsync(id);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var column = await _boardColumnService.GetBoardColumnByIdAsync(id, userId);
 
             return column is null ? NotFound() : Ok(column);
         }
@@ -29,10 +35,14 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="boardId"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpGet("Board/{boardId}")]
         public async Task<IActionResult> GetBoardColumnsByBoardId(int boardId)
         {
-            var columns = await _boardColumnService.GetBoardColumnsByBoardIdAsync(boardId);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var columns = await _boardColumnService.GetBoardColumnsByBoardIdAsync(boardId, userId);
             
             return Ok(columns);
         }
@@ -43,12 +53,16 @@ namespace KanbanApi.Controllers
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateBoardColumn(int boardId, CreateBoardColumnRequest request)
         {
-            var column = await _boardColumnService.CreateBoardColumnAsync(boardId, request);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var column = await _boardColumnService.CreateBoardColumnAsync(boardId, userId, request);
             
-            return CreatedAtAction(nameof(GetBoardColumn), new { id = column.Id }, column);
+            return CreatedAtAction(nameof(GetBoardColumn), new { id = column!.Id }, column);
         }
 
         /// <summary>
@@ -57,10 +71,14 @@ namespace KanbanApi.Controllers
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBoardColumn(int id, UpdateBoardColumnRequest request)
         {
-            var column = await _boardColumnService.UpdateBoardColumnAsync(id, request);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var column = await _boardColumnService.UpdateBoardColumnAsync(id, userId, request);
 
             return column is null ? NotFound() : Ok(column);
         }
@@ -70,10 +88,14 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBoardColumn(int id)
         {
-            var deleted = await _boardColumnService.DeleteBoardColumnAsync(id);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var deleted = await _boardColumnService.DeleteBoardColumnAsync(id, userId);
 
             return deleted ? NoContent() : NotFound();
         }
@@ -84,10 +106,14 @@ namespace KanbanApi.Controllers
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPatch("{id}/order")]
         public async Task<IActionResult> ChangeOrderBoardColumn(int id, ChangeOrderBoardColumnRequest request)
         {
-            var column = await _boardColumnService.ChangeOrderBoardColumnAsync(id, request);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var column = await _boardColumnService.ChangeOrderBoardColumnAsync(id, userId, request);
 
             return column is null ? NotFound() : Ok(column);
         }

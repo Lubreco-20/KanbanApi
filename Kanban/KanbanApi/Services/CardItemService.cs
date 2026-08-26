@@ -22,11 +22,14 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<CardItemResponse?> CreateCardItemAsync(int columnId, CreateCardItemRequest request)
+        public async Task<CardItemResponse?> CreateCardItemAsync(int columnId, int userId, CreateCardItemRequest request)
         {
             // Check if desired column exist
-            var column = await context.BoardColumns.FindAsync(columnId);
-            if (column == null) return null;
+            var column = await context.BoardColumns
+                .Include(bc => bc.Board)
+                .FirstOrDefaultAsync(bc => bc.ColumnId == columnId);
+            if (column == null || column.Board.UserId != userId) 
+                return null;
 
             // Look if there is any card in the column
             var cardsInColumn = await context.CardItems.
@@ -60,11 +63,15 @@ namespace KanbanApi.Services
         /// <param name="request"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<CardItemResponse?> UpdateCardItemAsync(int id, UpdateCardItemRequest request)
+        public async Task<CardItemResponse?> UpdateCardItemAsync(int id, int userId, UpdateCardItemRequest request)
         {
             // Find the card item in the database by its ID
-            var cardItem = await context.CardItems.FindAsync(id);
-            if (cardItem == null) return null;
+            var cardItem = await context.CardItems
+                .Include(cd => cd.Column)
+                .ThenInclude(bc => bc.Board)
+                .FirstOrDefaultAsync(cd => cd.CardId == id);
+            if (cardItem == null || cardItem.Column.Board.UserId != userId) 
+                return null;
 
             // Update the card item properties based on the request data
             cardItem.Title = request.Title;
@@ -81,11 +88,14 @@ namespace KanbanApi.Services
         /// <param name="id"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<CardItemResponse?> GetCardItemByIdAsync(int id)
+        public async Task<CardItemResponse?> GetCardItemByIdAsync(int id, int userId)
         {
             // Find the card item in the database by its ID
-            var cardItem = await context.CardItems.FindAsync(id);
-            if (cardItem == null)
+            var cardItem = await context.CardItems
+                .Include(cd => cd.Column)
+                .ThenInclude(bc => bc.Board)
+                .FirstOrDefaultAsync(cd => cd.CardId == id);
+            if (cardItem == null || cardItem.Column.Board.UserId != userId)
                 return null;
 
             // Return the found card item as a response DTO
@@ -97,11 +107,13 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="columnId"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId)
+        public async Task<IEnumerable<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId, int userId)
         {
             // Retrieve all card items associated with the specified column ID
             var cardItems = await context.CardItems
-                .Where(ci => ci.ColumnId == columnId)
+                .Include(cd => cd.Column)
+                .ThenInclude(bc => bc.Board)
+                .Where(ci => ci.ColumnId == columnId && ci.Column.Board.UserId == userId)
                 .ToListAsync();
 
             // Convert the list of card items to a list of response DTOs and return it
@@ -114,11 +126,15 @@ namespace KanbanApi.Services
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<CardItemResponse?> ChangeOrderCardItemAsync(int id, ChangeOrderCardItemRequest request)
+        public async Task<CardItemResponse?> ChangeOrderCardItemAsync(int id, int userId, ChangeOrderCardItemRequest request)
         {
             // Find the card item in the database by its ID
-            var cardItem = await context.CardItems.FindAsync(id);
-            if (cardItem == null) return null;
+            var cardItem = await context.CardItems
+                .Include(cd => cd.Column)
+                .ThenInclude(bc => bc.Board)
+                .FirstOrDefaultAsync(cd => cd.CardId == id);
+            if (cardItem == null || cardItem.Column.Board.UserId != userId) 
+                return null;
 
             // Validate the new order value to ensure it is within the valid range
             var cardInColumn = await context.CardItems.CountAsync(ci => ci.ColumnId == cardItem.ColumnId);
@@ -147,16 +163,24 @@ namespace KanbanApi.Services
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<CardItemResponse?> MoveCardItemColumnAsync(int id, MoveCardItemColumnRequest request)
+        public async Task<CardItemResponse?> MoveCardItemColumnAsync(int id, int userId, MoveCardItemColumnRequest request)
         {
             // Find the card item in the database by its ID
-            var cardItem = await context.CardItems.FindAsync(id);
-            if (cardItem == null) return null;
+            var cardItem = await context.CardItems
+                .Include(cd => cd.Column)
+                .ThenInclude(bc => bc.Board)
+                .FirstOrDefaultAsync(cd => cd.CardId == id);
+            if (cardItem == null || cardItem.Column.Board.UserId != userId)
+                return null;
 
             // Find the destination column in the database by its ID
-            var destinationColumn = await context.BoardColumns.FindAsync(request.DestinationColumnId);
-            if (destinationColumn == null) return null;
-            if(destinationColumn.ColumnId == cardItem.ColumnId) return cardItem.ToDto();
+            var destinationColumn = await context.BoardColumns
+            .Include(bc => bc.Board)
+            .FirstOrDefaultAsync(bc => bc.ColumnId == request.DestinationColumnId);
+
+            if (destinationColumn == null || destinationColumn.Board.UserId != userId)
+                return null;
+            if (destinationColumn.ColumnId == cardItem.ColumnId) return cardItem.ToDto();
 
             int newColumnId = request.DestinationColumnId;
             int oldColumnId = cardItem.ColumnId;
@@ -198,11 +222,14 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteCardItemAsync(int id)
+        public async Task<bool> DeleteCardItemAsync(int id, int userId)
         {
             // Find the card item in the database by its ID
-            var cardItem = await context.CardItems.FindAsync(id);
-            if (cardItem == null)
+            var cardItem = await context.CardItems
+                .Include(cd => cd.Column)
+                .ThenInclude(bc => bc.Board)
+                .FirstOrDefaultAsync(cd => cd.CardId == id);
+            if (cardItem == null || cardItem.Column.Board.UserId != userId)
                 return false;
 
             await ReorderCardsAfterDelete(cardItem);

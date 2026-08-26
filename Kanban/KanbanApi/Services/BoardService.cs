@@ -21,7 +21,7 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<BoardResponse?> CreateBoardAsync(int userId,CreateBoardRequest request)
+        public async Task<BoardResponse?> CreateBoardAsync(int userId, CreateBoardRequest request)
         {
             // Check if the user exists
             var user = await context.Users.FindAsync(userId);
@@ -50,11 +50,11 @@ namespace KanbanApi.Services
         /// <param name="request"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<BoardResponse?> UpdateBoardAsync(int id, UpdateBoardRequest request)
+        public async Task<BoardResponse?> UpdateBoardAsync(int id, int userId, UpdateBoardRequest request)
         {
             // Find the existing board by its ID
             var board = await context.Boards.FindAsync(id);
-            if (board == null)
+            if (board == null || board.UserId != userId)
                 return null;
 
             // Update the board's properties with the data from the request
@@ -74,11 +74,11 @@ namespace KanbanApi.Services
         /// <param name="id"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<BoardResponse?> GetBoardByIdAsync(int id)
+        public async Task<BoardResponse?> GetBoardByIdAsync(int id, int userId)
         {
             // Find the board by its ID
             var board = await context.Boards.FindAsync(id);
-            if (board == null)
+            if (board == null || board.UserId != userId)
                 return null;
 
             // Convert the board entity to a BoardResponse DTO and return it
@@ -106,11 +106,11 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteBoardAsync(int id)
+        public async Task<bool> DeleteBoardAsync(int id, int userId)
         {
             // Find the board by its ID
             var board = await context.Boards.FindAsync(id);
-            if (board == null)
+            if (board == null || board.UserId != userId)
                 return false;
 
             // Remove the board from the database context and save changes

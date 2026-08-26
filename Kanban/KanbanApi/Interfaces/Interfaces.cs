@@ -8,38 +8,38 @@ namespace KanbanApi.Interfaces
         Task<UserResponse> CreateUserAsync(CreateUserRequest request);
         Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest request);
         Task<UserResponse?> UpdatePasswordAsync(int id, UpdatePasswordRequest request);
-        Task<UserResponse?> GetUserByIdAsync(int id);
-        Task<bool> DeleteUserAsync(int id);
+        Task<UserResponse?> GetUserByIdAsync(int id, int authenticateId);
+        Task<bool> DeleteUserAsync(int id, int authenticateId);
     }
 
     public interface IBoardService
     {
         Task<BoardResponse?> CreateBoardAsync(int userId, CreateBoardRequest request);
-        Task<BoardResponse?> UpdateBoardAsync(int id, UpdateBoardRequest request);
-        Task<BoardResponse?> GetBoardByIdAsync(int id);
+        Task<BoardResponse?> UpdateBoardAsync(int id, int userId, UpdateBoardRequest request);
+        Task<BoardResponse?> GetBoardByIdAsync(int id, int userId);
         Task<IEnumerable<BoardResponse>> GetBoardsByUserIdAsync(int userId);
-        Task<bool> DeleteBoardAsync(int id);
+        Task<bool> DeleteBoardAsync(int id, int userId);
     }
 
     public interface IBoardColumnService
     {
-        Task<BoardColumnResponse?> CreateBoardColumnAsync(int boardId, CreateBoardColumnRequest request);
-        Task<BoardColumnResponse?> UpdateBoardColumnAsync(int id, UpdateBoardColumnRequest request);
-        Task<BoardColumnResponse?> GetBoardColumnByIdAsync(int id);
-        Task<IEnumerable<BoardColumnResponse>> GetBoardColumnsByBoardIdAsync(int boardId);
-        Task<BoardColumnResponse?> ChangeOrderBoardColumnAsync(int id, ChangeOrderBoardColumnRequest request);
-        Task<bool> DeleteBoardColumnAsync(int id);
+        Task<BoardColumnResponse?> CreateBoardColumnAsync(int boardId, int userId, CreateBoardColumnRequest request);
+        Task<BoardColumnResponse?> UpdateBoardColumnAsync(int id, int userId, UpdateBoardColumnRequest request);
+        Task<BoardColumnResponse?> GetBoardColumnByIdAsync(int id, int userId);
+        Task<IEnumerable<BoardColumnResponse>> GetBoardColumnsByBoardIdAsync(int boardId, int userId);
+        Task<BoardColumnResponse?> ChangeOrderBoardColumnAsync(int id, int userId, ChangeOrderBoardColumnRequest request);
+        Task<bool> DeleteBoardColumnAsync(int id, int userId);
     }
 
     public interface ICardItemService
     {
-        Task<CardItemResponse?> CreateCardItemAsync(int columnId, CreateCardItemRequest request);
-        Task<CardItemResponse?> UpdateCardItemAsync(int id, UpdateCardItemRequest request);
-        Task<CardItemResponse?> GetCardItemByIdAsync(int id);
-        Task<IEnumerable<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId);
-        Task<CardItemResponse?> ChangeOrderCardItemAsync(int id, ChangeOrderCardItemRequest request);
-        Task<CardItemResponse?> MoveCardItemColumnAsync(int id, MoveCardItemColumnRequest request);
-        Task<bool> DeleteCardItemAsync(int id);
+        Task<CardItemResponse?> CreateCardItemAsync(int columnId, int userId, CreateCardItemRequest request);
+        Task<CardItemResponse?> UpdateCardItemAsync(int id, int userId, UpdateCardItemRequest request);
+        Task<CardItemResponse?> GetCardItemByIdAsync(int id, int userId);
+        Task<IEnumerable<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId, int userId);
+        Task<CardItemResponse?> ChangeOrderCardItemAsync(int id, int userId, ChangeOrderCardItemRequest request);
+        Task<CardItemResponse?> MoveCardItemColumnAsync(int id, int userId, MoveCardItemColumnRequest request);
+        Task<bool> DeleteCardItemAsync(int id, int userId);
     }
 
     public interface ITokenService

@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using KanbanApi.DTOs;
+﻿using KanbanApi.DTOs;
 using KanbanApi.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace KanbanApi.Controllers
 {
@@ -21,11 +23,18 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUser(int id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int authenticatedUserId = int.Parse(userIdClaim!);
+
+            if (id != authenticatedUserId)
+                return NotFound();
+
             // Retrieve the user by ID using the user service
-            var user = await _userService.GetUserByIdAsync(id);
+            var user = await _userService.GetUserByIdAsync(id, authenticatedUserId);
 
             // If the user is not found, return a 404 Not Found response; otherwise, return the user data with a 200 OK response
             return user is null ? NotFound() : Ok(user);
@@ -52,9 +61,13 @@ namespace KanbanApi.Controllers
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, UpdateUserRequest request)
+        public async Task<IActionResult> UpdateUser(UpdateUserRequest request)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int id = int.Parse(userIdClaim!);
+
             // Update the user using the user service
             var user = await _userService.UpdateUserAsync(id, request);
 
@@ -68,9 +81,13 @@ namespace KanbanApi.Controllers
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPut("{id}/password")]
-        public async Task<IActionResult> UpdatePassword(int id, UpdatePasswordRequest request)
+        public async Task<IActionResult> UpdatePassword(UpdatePasswordRequest request)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int id = int.Parse(userIdClaim!);
+
             // Update the user's password using the user service
             var user = await _userService.UpdatePasswordAsync(id, request);
 
@@ -83,11 +100,18 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int authenticatedUserId = int.Parse(userIdClaim!);
+
+            if (id != authenticatedUserId)
+                return NotFound();
+
             // Delete the user using the user service
-            var deleted = await _userService.DeleteUserAsync(id);
+            var deleted = await _userService.DeleteUserAsync(id, authenticatedUserId);
 
             // If the user is not found, return a 404 Not Found response; otherwise, return a 204 No Content response indicating successful deletion
             return deleted ? NoContent() : NotFound();

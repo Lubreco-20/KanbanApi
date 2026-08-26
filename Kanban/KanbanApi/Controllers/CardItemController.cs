@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using KanbanApi.DTOs;
+﻿using KanbanApi.DTOs;
 using KanbanApi.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace KanbanApi.Controllers
 {
@@ -21,10 +23,14 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCardItem(int id)
         {
-            var cardItem = await _cardItemService.GetCardItemByIdAsync(id);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var cardItem = await _cardItemService.GetCardItemByIdAsync(id, userId);
             return cardItem is null ? NotFound() : Ok(cardItem);
         }
 
@@ -33,10 +39,14 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="boardColumnId"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpGet("Column/{boardColumnId}")]
         public async Task<IActionResult> GetCardItemsByBoardColumnId(int boardColumnId)
         {
-            var cardItems = await _cardItemService.GetCardItemsByColumnIdAsync(boardColumnId);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var cardItems = await _cardItemService.GetCardItemsByColumnIdAsync(boardColumnId, userId);
             return Ok(cardItems);
         }
 
@@ -46,11 +56,15 @@ namespace KanbanApi.Controllers
         /// <param name="boardColumnId"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateCardItem(int boardColumnId, CreateCardItemRequest request)
         {
-            var cardItem = await _cardItemService.CreateCardItemAsync(boardColumnId, request);
-            return CreatedAtAction(nameof(GetCardItem), new { id = cardItem.Id }, cardItem);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var cardItem = await _cardItemService.CreateCardItemAsync(boardColumnId, userId, request);
+            return CreatedAtAction(nameof(GetCardItem), new { id = cardItem!.Id }, cardItem);
         }
 
         /// <summary>
@@ -59,10 +73,14 @@ namespace KanbanApi.Controllers
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCardItem(int id, UpdateCardItemRequest request)
         {
-            var cardItem = await _cardItemService.UpdateCardItemAsync(id, request);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var cardItem = await _cardItemService.UpdateCardItemAsync(id, userId, request);
             return cardItem is null ? NotFound() : Ok(cardItem);
         }
 
@@ -72,10 +90,14 @@ namespace KanbanApi.Controllers
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPatch("{id}/order")]
         public async Task<IActionResult> ChangeOrderCardItem(int id, ChangeOrderCardItemRequest request)
         {
-            var cardItem = await _cardItemService.ChangeOrderCardItemAsync(id, request);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var cardItem = await _cardItemService.ChangeOrderCardItemAsync(id, userId, request);
             return cardItem is null ? NotFound() : Ok(cardItem);
         }
 
@@ -85,10 +107,14 @@ namespace KanbanApi.Controllers
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpPatch("{id}/move")]
         public async Task<IActionResult> MoveCardItemColumn(int id, MoveCardItemColumnRequest request)
         {
-            var cardItem = await _cardItemService.MoveCardItemColumnAsync(id, request);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var cardItem = await _cardItemService.MoveCardItemColumnAsync(id, userId, request);
             return cardItem is null ? NotFound() : Ok(cardItem);
         }
 
@@ -97,10 +123,14 @@ namespace KanbanApi.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCardItem(int id)
         {
-            var success = await _cardItemService.DeleteCardItemAsync(id);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int userId = int.Parse(userIdClaim!);
+
+            var success = await _cardItemService.DeleteCardItemAsync(id, userId);
             return success ? NoContent() : NotFound();
         }
     }

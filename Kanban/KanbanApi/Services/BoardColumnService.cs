@@ -21,11 +21,12 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<BoardColumnResponse?> CreateBoardColumnAsync(int boardId, CreateBoardColumnRequest request)
+        public async Task<BoardColumnResponse?> CreateBoardColumnAsync(int boardId, int userId, CreateBoardColumnRequest request)
         {
             // Check if the board exists
             var board = await context.Boards.FindAsync(boardId);
-            if (board == null) return null;
+            if (board == null || board.UserId != userId) 
+                return null;
 
             var columns = await context.BoardColumns.
                 Where(b => b.BoardId == board.BoardId).
@@ -56,11 +57,14 @@ namespace KanbanApi.Services
         /// <param name="request"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<BoardColumnResponse?> UpdateBoardColumnAsync(int id, UpdateBoardColumnRequest request)
+        public async Task<BoardColumnResponse?> UpdateBoardColumnAsync(int id, int userId, UpdateBoardColumnRequest request)
         {
             // Check if the board column exists
-            var boardColumn = await context.BoardColumns.FindAsync(id);
-            if (boardColumn == null)
+            var boardColumn = await context.BoardColumns
+                .Include(bc => bc.Board)
+                .Where(bc => bc.ColumnId == id)
+                .FirstOrDefaultAsync();
+            if (boardColumn == null || boardColumn.Board.UserId != userId)
                 return null;
 
             // Update the board column properties based on the request
@@ -77,11 +81,14 @@ namespace KanbanApi.Services
         /// <param name="id"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<BoardColumnResponse?> GetBoardColumnByIdAsync(int id)
+        public async Task<BoardColumnResponse?> GetBoardColumnByIdAsync(int id, int userId)
         {
             // Check if the board column exists
-            var boardColumn = await context.BoardColumns.FindAsync(id);
-            if (boardColumn == null)
+            var boardColumn = await context.BoardColumns
+                .Include(bc => bc.Board)
+                .Where(bc => bc.ColumnId == id)
+                .FirstOrDefaultAsync();
+            if (boardColumn == null || boardColumn.Board.UserId != userId)
                 return null;
 
             // Return the board column as a response DTO
@@ -93,11 +100,11 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="boardId"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<BoardColumnResponse>> GetBoardColumnsByBoardIdAsync(int boardId)
+        public async Task<IEnumerable<BoardColumnResponse>> GetBoardColumnsByBoardIdAsync(int boardId, int userId)
         {
             // Retrieve all board columns associated with the specified board ID
             var boardColumns = await context.BoardColumns
-                .Where(bc => bc.BoardId == boardId)
+                .Where(bc => bc.BoardId == boardId && bc.Board.UserId == userId)
                 .ToListAsync<BoardColumn>();
 
             // Convert the board columns to response DTOs and return them
@@ -110,11 +117,15 @@ namespace KanbanApi.Services
         /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task<BoardColumnResponse?> ChangeOrderBoardColumnAsync(int id, ChangeOrderBoardColumnRequest request)
+        public async Task<BoardColumnResponse?> ChangeOrderBoardColumnAsync(int id, int userId, ChangeOrderBoardColumnRequest request)
         {
             // Check if the board column exists
-            var column = await context.BoardColumns.FindAsync(id);
-            if (column == null) return null;
+            var column = await context.BoardColumns
+                .Include(bc => bc.Board)
+                .Where(bc => bc.ColumnId == id)
+                .FirstOrDefaultAsync();
+            if (column == null || column.Board.UserId != userId)
+                return null;
 
             // Validate the new order value to ensure it is within the valid range
             var amountColumns = await context.BoardColumns.CountAsync(bc => bc.BoardId == column.BoardId);
@@ -141,11 +152,14 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteBoardColumnAsync(int id)
+        public async Task<bool> DeleteBoardColumnAsync(int id, int userId)
         {
             // Check if the board column exists
-            var boardColumn = await context.BoardColumns.FindAsync(id);
-            if (boardColumn == null)
+            var boardColumn = await context.BoardColumns
+                .Include(bc => bc.Board)
+                .Where(bc => bc.ColumnId == id)
+                .FirstOrDefaultAsync();
+            if (boardColumn == null || boardColumn.Board.UserId != userId)
                 return false;
 
             await ReorderColumnsAfterDelete(boardColumn);

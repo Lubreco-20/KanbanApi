@@ -85,9 +85,11 @@ namespace KanbanApi.Services
         /// <param name="id"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<UserResponse?> GetUserByIdAsync(int id)
+        public async Task<UserResponse?> GetUserByIdAsync(int id, int authenticateId)
         {
             // Find the user by ID
+            if (id != authenticateId) return null;
+
             var user = await context.Users.FindAsync(id);
             if (user == null)
                 return null;
@@ -101,9 +103,11 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteUserAsync(int id)
+        public async Task<bool> DeleteUserAsync(int id, int authenticateId)
         {
             // Find the user by ID
+            if (id != authenticateId) return false;
+
             var user = await context.Users.FindAsync(id);
             if (user == null)
                 return false;
