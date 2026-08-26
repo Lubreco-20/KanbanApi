@@ -41,8 +41,8 @@ namespace KanbanApi.Controllers
         /// <param name="userId"></param>
         /// <returns></returns>
         [Authorize]
-        [HttpGet("User/{userId}")]
-        public async Task<IActionResult> GetBoardByUserId()
+        [HttpGet("mine")]
+        public async Task<IActionResult> GetMyBoards()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int userId = int.Parse(userIdClaim!);
