@@ -45,7 +45,7 @@ namespace KanbanApi.Services
         public async Task<bool> LogoutAsync(LogoutRequest request)
         {
             var storedToken = await context.Tokens
-                .FirstOrDefaultAsync(t => t.Token == request.refreshToken);
+                .FirstOrDefaultAsync(t => t.Token == request.RefreshToken);
 
             if (storedToken == null)
                 return false;

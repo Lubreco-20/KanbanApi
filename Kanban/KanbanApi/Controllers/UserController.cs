@@ -58,7 +58,6 @@ namespace KanbanApi.Controllers
         /// <summary>
         /// Updates an existing user by their ID.
         /// </summary>
-        /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
         [Authorize]
@@ -78,7 +77,6 @@ namespace KanbanApi.Controllers
         /// <summary>
         /// Updates the password of an existing user by their ID.
         /// </summary>
-        /// <param name="id"></param>
         /// <param name="request"></param>
         /// <returns></returns>
         [Authorize]

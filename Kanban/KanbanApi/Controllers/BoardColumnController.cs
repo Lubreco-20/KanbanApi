@@ -50,7 +50,7 @@ namespace KanbanApi.Controllers
         /// <summary>
         /// Creates a new board column for a specific board.
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="boardId"></param>
         /// <param name="request"></param>
         /// <returns></returns>
         [Authorize]

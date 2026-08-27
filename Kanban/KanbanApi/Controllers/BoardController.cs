@@ -38,7 +38,6 @@ namespace KanbanApi.Controllers
         /// <summary>
         /// Gets all boards associated with a specific user by their user ID.
         /// </summary>
-        /// <param name="userId"></param>
         /// <returns></returns>
         [Authorize]
         [HttpGet("mine")]
@@ -55,7 +54,6 @@ namespace KanbanApi.Controllers
         /// <summary>
         /// Creates a new board for a specific user.
         /// </summary>
-        /// <param name="userId"></param>
         /// <param name="request"></param>
         /// <returns></returns>
         [Authorize]
