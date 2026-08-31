@@ -41,12 +41,12 @@ namespace KanbanApi.Controllers
         /// <returns></returns>
         [Authorize]
         [HttpGet("mine")]
-        public async Task<IActionResult> GetMyBoards()
+        public async Task<IActionResult> GetMyBoards([FromQuery] PageRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int userId = int.Parse(userIdClaim!);
 
-            var board = await _boardService.GetBoardsByUserIdAsync(userId);
+            var board = await _boardService.GetBoardsByUserIdAsync(userId, request.Page, request.PageSize);
 
             return Ok(board);
         }

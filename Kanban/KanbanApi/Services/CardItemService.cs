@@ -107,17 +107,31 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="columnId"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId, int userId)
+        public async Task<PageResponse<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId, int userId, int page, int pageSize)
         {
             // Retrieve all card items associated with the specified column ID
-            var cardItems = await context.CardItems
+            var query = context.CardItems
                 .Include(cd => cd.Column)
                 .ThenInclude(bc => bc.Board)
-                .Where(ci => ci.ColumnId == columnId && ci.Column.Board.UserId == userId)
+                .Where(ci => ci.ColumnId == columnId && ci.Column.Board.UserId == userId);
+
+            var totalCount = await query.CountAsync();
+
+            var cardItems = await query
+                .OrderBy(ci => ci.CardId)
+                .Skip((page - 1) * page)
+                .Take(pageSize)
                 .ToListAsync();
 
+            var totalPages = (int)Math.Ceiling(totalCount / (Double)pageSize);
+
             // Convert the list of card items to a list of response DTOs and return it
-            return cardItems.Select(ci => ci.ToDto());
+            return new PageResponse<CardItemResponse>(
+                cardItems.Select(ci => ci.ToDto()).ToList(),
+                page,
+                pageSize,
+                totalCount,
+                totalPages);
         }
 
         /// <summary>

@@ -17,7 +17,7 @@ namespace KanbanApi.Interfaces
         Task<BoardResponse?> CreateBoardAsync(int userId, CreateBoardRequest request);
         Task<BoardResponse?> UpdateBoardAsync(int id, int userId, UpdateBoardRequest request);
         Task<BoardResponse?> GetBoardByIdAsync(int id, int userId);
-        Task<IEnumerable<BoardResponse>> GetBoardsByUserIdAsync(int userId);
+        Task<PageResponse<BoardResponse>> GetBoardsByUserIdAsync(int userId, int page, int pageSize);
         Task<bool> DeleteBoardAsync(int id, int userId);
     }
 
@@ -36,7 +36,7 @@ namespace KanbanApi.Interfaces
         Task<CardItemResponse?> CreateCardItemAsync(int columnId, int userId, CreateCardItemRequest request);
         Task<CardItemResponse?> UpdateCardItemAsync(int id, int userId, UpdateCardItemRequest request);
         Task<CardItemResponse?> GetCardItemByIdAsync(int id, int userId);
-        Task<IEnumerable<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId, int userId);
+        Task<PageResponse<CardItemResponse>> GetCardItemsByColumnIdAsync(int columnId, int userId, int page, int pageSize);
         Task<CardItemResponse?> ChangeOrderCardItemAsync(int id, int userId, ChangeOrderCardItemRequest request);
         Task<CardItemResponse?> MoveCardItemColumnAsync(int id, int userId, MoveCardItemColumnRequest request);
         Task<bool> DeleteCardItemAsync(int id, int userId);

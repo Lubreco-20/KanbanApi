@@ -41,12 +41,12 @@ namespace KanbanApi.Controllers
         /// <returns></returns>
         [Authorize]
         [HttpGet("Column/{boardColumnId}")]
-        public async Task<IActionResult> GetCardItemsByBoardColumnId(int boardColumnId)
+        public async Task<IActionResult> GetCardItemsByBoardColumnId(int boardColumnId, PageRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int userId = int.Parse(userIdClaim!);
 
-            var cardItems = await _cardItemService.GetCardItemsByColumnIdAsync(boardColumnId, userId);
+            var cardItems = await _cardItemService.GetCardItemsByColumnIdAsync(boardColumnId, userId, request.Page, request.PageSize);
             return Ok(cardItems);
         }
 

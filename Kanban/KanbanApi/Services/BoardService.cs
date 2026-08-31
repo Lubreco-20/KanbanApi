@@ -69,7 +69,7 @@ namespace KanbanApi.Services
         }
 
         /// <summary>
-        /// Deletes an existing board identified by its ID from the database.
+        /// Get the board by the Id from the Database
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -90,15 +90,28 @@ namespace KanbanApi.Services
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<BoardResponse>> GetBoardsByUserIdAsync(int userId)
+        public async Task<PageResponse<BoardResponse>> GetBoardsByUserIdAsync(int userId, int page, int pageSize)
         {
-            // Retrieve all boards associated with the specified user ID
-            var boards = await context.Boards
-                .Where(b => b.UserId == userId)
+            // Retrieve all boards associated with the specified user ID and count the amount
+            var query = context.Boards.Where(b => b.UserId == userId);
+            var totalCount = await query.CountAsync();
+
+            // We make a query to get all the items in the page
+            var boards = await query
+                .OrderBy(b => b.BoardId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
             // Convert the list of board entities to a list of BoardResponse DTOs and return it
-            return boards.Select(b => b.ToDto());
+            return new PageResponse<BoardResponse>(
+                boards.Select(b => b.ToDto()).ToList(),
+                page,
+                pageSize,
+                totalCount,
+                totalPages);
         }
 
         /// <summary>
